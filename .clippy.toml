@@ -1,0 +1,7 @@
+# Clippy configuration
+
+# Allow unwrap() in tests
+allow-unwrap-in-tests = true
+
+# Extra restrictions
+too-many-arguments-threshold = 5

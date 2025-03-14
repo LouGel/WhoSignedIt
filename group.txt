@@ -1,0 +1,4 @@
+# Sample group of public keys (Ethereum addresses)
+# The following are example addresses - replace with your own
+0x4bd3c4bD35a27C00b85F874afBEf252cf4373f65
+0x4bd3c4bD35a27C00b85F874afBEf252cf4373f6f
