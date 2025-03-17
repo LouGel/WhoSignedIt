@@ -18,6 +18,19 @@ pub enum PublicKey {
     // Solana(ed25519_dalek::PublicKey),
 }
 
+impl PublicKey {
+    /// Convert the public key to a vector of bytes
+    pub fn to_vec_u8(&self) -> Vec<u8> {
+        match self {
+            PublicKey::Ethereum(address) => address.to_vec(),
+            // PublicKey::Solana(pubkey) => {
+            //     // For Solana, you would typically use the 32-byte public key
+            //     pubkey.to_bytes().to_vec()
+            // },
+        }
+    }
+}
+
 /// Trait for signature clients
 pub trait SignatureClient: Send + Sync + Debug {
     /// Sign a message using the specified private key
