@@ -2,7 +2,8 @@ use super::error::ProofErrorKind::ZeroLink;
 use crate::error::AppError;
 use crate::services::proof::traits::{Proof, ProofClient};
 use crate::services::signature::traits::{BlockchainSignature, PublicKey, SignatureClient};
-use alloy_primitives::{keccak256, B256, U256};
+use alloy_primitives::{keccak256, FixedBytes, B256, U256};
+use rand::seq::SliceRandom;
 // use eyre::Result;
 use rand::{rng, Rng};
 use std::fmt::Debug;
@@ -50,10 +51,11 @@ impl Proof for ZeroLinkProofSignature {
         }
 
         // Verify each member's commitment
+        let ring = order_group(&self.ring);
         for i in 0..self.ring.len() {
             let valid = verify_commitment(
                 &self.message,
-                &self.ring[i],
+                &ring[i],
                 self.responses[i],
                 &self.commitments[i],
             )?;
@@ -121,7 +123,11 @@ fn verify_responses_sum(responses: &[U256], challenge: &B256) -> Result<bool, Ap
     // Sum of responses should be equal to challenge (mod 2^256)
     Ok(sum == challenge_u256)
 }
-
+fn order_group(group: &[PublicKey]) -> Vec<PublicKey> {
+    let mut group = group.to_vec();
+    group.sort_by(|a, b| a.to_vec_u8().cmp(&b.to_vec_u8()));
+    group
+}
 impl ProofClient for RingProofClient {
     fn create_group_signature_proof(
         &self,
@@ -129,26 +135,17 @@ impl ProofClient for RingProofClient {
         signature: &BlockchainSignature,
         group: &[PublicKey],
     ) -> Result<Box<dyn Proof>, AppError> {
+        let group = order_group(group);
         // First verify the original signature
         let signer_public_key = self.signature_client.verify_signature(message, signature)?;
 
-        if !group.contains(&signer_public_key) {
-            return Err(ZeroLink("Invalid original signature".to_owned()).into());
-        }
-
-        // Find the signer's position in the group
         let signer_position = group
             .iter()
             .position(|pk| *pk == signer_public_key)
             .ok_or_else(|| ZeroLink("Signer's public key not found in the group".to_owned()))?;
 
-        println!("Signer position in group: {}", signer_position);
-
-        // Create a challenge from the message
         let challenge = keccak256(message.as_bytes());
         let challenge_u256 = U256::from_be_bytes(challenge.0);
-
-        println!("Challenge: {}", challenge_u256);
 
         // Generate random responses for everyone except the signer
         let mut responses = Vec::with_capacity(group.len());
@@ -156,15 +153,13 @@ impl ProofClient for RingProofClient {
 
         for i in 0..group.len() {
             if i != signer_position {
-                // Random response for non-signers
-                let response = U256::from(rng().random::<u64>());
-                responses.push(response);
+                let response = U256::from(rng().random::<u128>()) // Change u64 -> u128 (or u256 if possible)
+                    | (U256::from(rng().random::<u128>()) << 128); // Fill full 256 bits
 
-                // Add to sum
+                responses.push(response);
                 response_sum = response_sum.overflowing_add(response).0;
             } else {
-                // Placeholder for signer's response
-                responses.push(U256::from(0));
+                responses.push(U256::from(0)); // Placeholder
             }
         }
 
@@ -204,7 +199,6 @@ impl ProofClient for RingProofClient {
             response_sum_check == challenge_u256
         );
 
-        // Create the proof
         let proof = ZeroLinkProofSignature {
             message: message.to_string(),
             ring: group.to_vec(),
@@ -213,7 +207,7 @@ impl ProofClient for RingProofClient {
             commitments,
         };
 
-        println!("OR-proof created successfully");
+        println!("OR-proof created successfully {proof:#?}");
 
         Ok(Box::new(proof))
     }
