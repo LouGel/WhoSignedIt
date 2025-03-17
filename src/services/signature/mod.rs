@@ -1,6 +1,7 @@
 // File: src/services/signature/mod.rs
 pub mod ethereum;
 // mod solana;
+pub mod error;
 pub mod traits;
 
 pub use ethereum::EthereumSignatureClient;

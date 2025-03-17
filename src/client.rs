@@ -35,10 +35,6 @@ pub struct AppArgs {
     #[clap(long)]
     pub private_key: Option<String>,
 
-    /// Signer's public key
-    #[clap(long)]
-    pub signer_public_key: String,
-
     /// Group public keys (comma-separated)
     #[clap(short, long, num_args = 1..)]
     pub group_public_keys: Vec<String>,
@@ -65,7 +61,7 @@ impl AppClient {
         // Parse or create a signature
         let signature = if let Some(sig_str) = &args.signature {
             // Parse an existing signature
-            self.signature_client.parse_signature(sig_str)?
+            self.signature_client.from_str(sig_str)?
         } else if let Some(private_key) = &args.private_key {
             // Create a new signature
             self.signature_client
@@ -76,11 +72,6 @@ impl AppClient {
             ));
         };
 
-        // Parse the signer's public key
-        let signer_public_key = self
-            .signature_client
-            .parse_public_key(&args.signer_public_key)?;
-
         // Parse the group public keys
         let mut group = Vec::new();
         for pubkey_str in &args.group_public_keys {
@@ -89,12 +80,9 @@ impl AppClient {
         }
 
         // Create the group signature proof
-        let proof = self.proof_client.create_group_signature_proof(
-            &args.message,
-            &signer_public_key,
-            &signature,
-            &group,
-        )?;
+        let proof =
+            self.proof_client
+                .create_group_signature_proof(&args.message, &signature, &group)?;
         println!("Proof created: {}", proof.message());
 
         let is_valid = proof.verify()?;
