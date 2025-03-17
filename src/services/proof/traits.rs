@@ -1,11 +1,14 @@
-use crate::services::signature::traits::{BlockchainSignature, PublicKey};
+use crate::{
+    error::AppError,
+    services::signature::traits::{BlockchainSignature, PublicKey},
+};
 use eyre::Result;
 use std::fmt::Debug;
 
 /// Base trait for all proofs
 pub trait Proof: Send + Sync {
     /// Verify the proof
-    fn verify(&self) -> Result<bool>;
+    fn verify(&self) -> Result<bool, AppError>;
 
     /// Get the message associated with this proof
     fn message(&self) -> &str;
@@ -17,8 +20,7 @@ pub trait ProofClient: Send + Sync + Debug {
     fn create_group_signature_proof(
         &self,
         message: &str,
-        signer_public_key: &PublicKey,
         signature: &BlockchainSignature,
         group: &[PublicKey],
-    ) -> Result<Box<dyn Proof>>;
+    ) -> Result<Box<dyn Proof>, AppError>;
 }

@@ -1,8 +1,10 @@
-pub mod ring;
 pub mod traits;
+pub mod zerolink;
 
-pub use ring::RingProofClient;
+pub mod error;
+
 pub use traits::{Proof, ProofClient};
+pub use zerolink::RingProofClient;
 
 use crate::services::signature::SignatureClient;
 
