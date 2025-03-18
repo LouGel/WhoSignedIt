@@ -6,7 +6,7 @@ use alloy_primitives::{keccak256, FixedBytes, B256, U256};
 use rand::seq::SliceRandom;
 // use eyre::Result;
 use rand::{rng, Rng};
-use std::fmt::Debug;
+use std::fmt::{Debug, Display};
 
 #[derive(Debug)]
 pub struct RingProofClient {
@@ -37,10 +37,16 @@ pub struct ZeroLinkProofSignature {
     /// Commitments for each member
     commitments: Vec<B256>,
 }
+impl Display for ZeroLinkProofSignature {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "\n{{\n{},\n{}\n}}", self.message, self.challenge)
+    }
+}
 
 impl Proof for ZeroLinkProofSignature {
     fn verify(&self) -> Result<bool, AppError> {
         println!("Verifying zero-link-proofsignature");
+        println!("{self}");
 
         // Verify that the sum of responses matches the challenge
         let sum_check = verify_responses_sum(&self.responses, &self.challenge)?;
@@ -51,7 +57,7 @@ impl Proof for ZeroLinkProofSignature {
         }
 
         // Verify each member's commitment
-        let ring = order_group(&self.ring);
+        let ring = order_public_keys(&self.ring);
         for i in 0..self.ring.len() {
             let valid = verify_commitment(
                 &self.message,
@@ -123,7 +129,7 @@ fn verify_responses_sum(responses: &[U256], challenge: &B256) -> Result<bool, Ap
     // Sum of responses should be equal to challenge (mod 2^256)
     Ok(sum == challenge_u256)
 }
-fn order_group(group: &[PublicKey]) -> Vec<PublicKey> {
+fn order_public_keys(group: &[PublicKey]) -> Vec<PublicKey> {
     let mut group = group.to_vec();
     group.sort_by(|a, b| a.to_vec_u8().cmp(&b.to_vec_u8()));
     group
@@ -135,10 +141,9 @@ impl ProofClient for RingProofClient {
         signature: &BlockchainSignature,
         group: &[PublicKey],
     ) -> Result<Box<dyn Proof>, AppError> {
-        let group = order_group(group);
-        // First verify the original signature
-        let signer_public_key = self.signature_client.verify_signature(message, signature)?;
+        let group = order_public_keys(group);
 
+        let signer_public_key = self.signature_client.verify_signature(message, signature)?;
         let signer_position = group
             .iter()
             .position(|pk| *pk == signer_public_key)
@@ -206,8 +211,6 @@ impl ProofClient for RingProofClient {
             responses,
             commitments,
         };
-
-        println!("OR-proof created successfully {proof:#?}");
 
         Ok(Box::new(proof))
     }

@@ -68,7 +68,7 @@ impl SignatureClient for EthereumSignatureClient {
                 "Invalid signature length: expected 65, got {}",
                 signature_raw.len()
             ))
-            .into()); // Convert AppError to eyre::Report
+            .into());
         }
 
         let signature = EthSignature::from_raw(&signature_raw)
