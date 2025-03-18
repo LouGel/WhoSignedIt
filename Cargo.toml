@@ -1,8 +1,8 @@
 [package]
-name = "phantom-signer"
+name = "WhoSignedIt"
 version = "0.1.0"
 edition = "2021"
-authors = ["Your Name <your.email@example.com>"]
+authors = ["LouGel <your.email@example.com>"]
 description = "Zero-knowledge group signature system"
 
 [dependencies]

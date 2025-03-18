@@ -3,10 +3,10 @@ use crate::{
     services::signature::traits::{BlockchainSignature, PublicKey},
 };
 use eyre::Result;
-use std::fmt::Debug;
+use std::fmt::{Debug, Display};
 
 /// Base trait for all proofs
-pub trait Proof: Send + Sync {
+pub trait Proof: Send + Sync + Display {
     /// Verify the proof
     fn verify(&self) -> Result<bool, AppError>;
 

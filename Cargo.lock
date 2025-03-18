@@ -3,6 +3,33 @@
 version = 4
 
 [[package]]
+name = "WhoSignedIt"
+version = "0.1.0"
+dependencies = [
+ "alloy-core",
+ "alloy-primitives",
+ "alloy-signer",
+ "alloy-signer-local",
+ "alloy-sol-types",
+ "clap",
+ "clippy",
+ "color-eyre",
+ "ed25519-dalek",
+ "eyre",
+ "hex",
+ "pretty_assertions",
+ "rand 0.9.0",
+ "serde",
+ "serde_json",
+ "sha2",
+ "tempfile",
+ "thiserror",
+ "tracing",
+ "tracing-subscriber",
+ "winterfell",
+]
+
+[[package]]
 name = "addr2line"
 version = "0.21.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1884,33 +1911,6 @@ dependencies = [
  "memchr",
  "thiserror",
  "ucd-trie",
-]
-
-[[package]]
-name = "phantom-signer"
-version = "0.1.0"
-dependencies = [
- "alloy-core",
- "alloy-primitives",
- "alloy-signer",
- "alloy-signer-local",
- "alloy-sol-types",
- "clap",
- "clippy",
- "color-eyre",
- "ed25519-dalek",
- "eyre",
- "hex",
- "pretty_assertions",
- "rand 0.9.0",
- "serde",
- "serde_json",
- "sha2",
- "tempfile",
- "thiserror",
- "tracing",
- "tracing-subscriber",
- "winterfell",
 ]
 
 [[package]]

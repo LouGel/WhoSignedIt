@@ -1,3 +1,5 @@
+use std::{fmt::write, fs::File, io::Write};
+
 use crate::services::{
     proof::{ProofClient, ProofClientFactory},
     signature::{SignatureClient, SignatureClientFactory},
@@ -26,6 +28,12 @@ pub struct AppArgs {
     /// Message to sign or verify
     #[clap(short, long)]
     pub message: String,
+
+    #[clap(short, long)]
+    pub input: Option<String>,
+
+    #[clap(short, long)]
+    pub output: Option<String>,
 
     /// Existing signature (optional)
     #[clap(short, long)]
@@ -83,13 +91,14 @@ impl AppClient {
         let proof =
             self.proof_client
                 .create_group_signature_proof(&args.message, &signature, &group)?;
-        println!("Proof created: {}", proof.message());
+        println!("Proof created: |||{}|||", proof);
 
-        let is_valid = proof.verify()?;
-        println!(
-            "Proof verification: {}",
-            if is_valid { "Valid" } else { "Invalid" }
-        );
+        if let Some(output) = args.output.as_ref() {
+            let mut handle = File::create(output).expect("Cannot create of open output file");
+            handle.write(format!("{proof}").as_bytes()).unwrap();
+        } else {
+            println!("{proof}")
+        }
 
         Ok(())
     }
