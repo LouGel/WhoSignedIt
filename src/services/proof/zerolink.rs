@@ -1,4 +1,5 @@
 use super::error::ProofErrorKind::ZeroLink;
+use super::traits::Format;
 use crate::error::AppError;
 use crate::services::proof::traits::{Proof, ProofClient};
 use crate::services::signature::traits::{BlockchainSignature, PublicKey, SignatureClient};
@@ -6,6 +7,7 @@ use alloy_primitives::{keccak256, FixedBytes, B256, U256};
 use rand::seq::SliceRandom;
 // use eyre::Result;
 use rand::{rng, Rng};
+use serde::{Deserialize, Serialize};
 use std::fmt::{Debug, Display};
 
 #[derive(Debug)]
@@ -20,7 +22,7 @@ impl RingProofClient {
 }
 
 /// A simpler OR-proof alternative to ring signatures
-#[derive(Debug)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct ZeroLinkProofSignature {
     /// The message that was signed
     message: String,
@@ -44,6 +46,12 @@ impl Display for ZeroLinkProofSignature {
 }
 
 impl Proof for ZeroLinkProofSignature {
+    fn format(&self, format: Format) -> String {
+        match format {
+            Format::Json => serde_json::to_string_pretty(self).unwrap(),
+            Format::Toml => toml::to_string(self).unwrap(),
+        }
+    }
     fn verify(&self) -> Result<bool, AppError> {
         println!("Verifying zero-link-proofsignature");
         println!("{self}");

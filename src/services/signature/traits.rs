@@ -1,5 +1,6 @@
 // File: src/services/signature/traits.rs
 use alloy_primitives::Address;
+use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
 
 use crate::error::AppError;
@@ -12,7 +13,7 @@ pub enum BlockchainSignature {
 }
 
 /// Represents a public key from any blockchain
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 pub enum PublicKey {
     Ethereum(Address),
     // Solana(ed25519_dalek::PublicKey),
