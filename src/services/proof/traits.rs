@@ -3,7 +3,6 @@ use crate::{
     error::AppError,
     services::signature::traits::{BlockchainSignature, PublicKey},
 };
-use eyre::Result;
 use std::fmt::{Debug, Display};
 
 pub trait Proof: Send + Sync + Display {

@@ -1,12 +1,12 @@
 use crate::client::client::{AppArgs, AppClient};
 use clap::Parser;
-use eyre::Result;
+use error::AppError;
 
 mod client;
 mod error;
 mod services;
 
-fn main() -> Result<()> {
+fn main() -> Result<(), AppError> {
     let args = AppArgs::parse();
     AppClient::run(&args)?;
     Ok(())

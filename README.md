@@ -28,6 +28,7 @@ cargo run -- verify --message "Hello, world!" --signature signature.json --group
 The group file is a simple text file with one Ethereum address per line in hex format (with or without 0x prefix).
 
 Example:
+
 ```
 # Group members
 0x742d35Cc6634C0532925a3b844Bc454e4438f44e
@@ -36,7 +37,7 @@ Example:
 
 ## Error Handling
 
-The tool uses `eyre` for user-friendly error handling and `thiserror` for defining error types.
+The tool uses `thiserror` for defining error types.
 
 ## Extending to Other Blockchains
 
