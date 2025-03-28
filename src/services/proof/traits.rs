@@ -1,29 +1,14 @@
 use crate::{
+    client::client::FormatInput,
     error::AppError,
     services::signature::traits::{BlockchainSignature, PublicKey},
 };
 use eyre::Result;
 use std::fmt::{Debug, Display};
-use tracing_subscriber::fmt::format::Format;
 
-#[derive(Debug, Clone, Copy)]
-pub enum FormatInput {
-    Json,
-    Toml,
-}
-impl std::str::FromStr for FormatInput {
-    type Err = AppError;
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s.to_ascii_lowercase().as_str() {
-            "json" => Ok(FormatInput::Json),
-            "toml" => Ok(FormatInput::Toml),
-            _ => Err(AppError::Custom("Invalid format".to_owned())),
-        }
-    }
-}
 pub trait Proof: Send + Sync + Display {
     fn verify(&self) -> Result<bool, AppError>;
-
+    #[allow(dead_code)]
     fn message(&self) -> &str;
 
     fn format(&self, format: &FormatInput) -> String;

@@ -1,5 +1,5 @@
 use super::error::ProofErrorKind::ZeroLink;
-use super::traits::FormatInput;
+use crate::client::client::FormatInput;
 use crate::error::AppError;
 use crate::services::proof::traits::{Proof, ProofClient};
 use crate::services::signature::traits::{BlockchainSignature, PublicKey, SignatureClient};
