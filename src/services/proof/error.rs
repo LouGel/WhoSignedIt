@@ -6,9 +6,8 @@ pub enum ProofErrorKind {
     #[error("Zerolink: {0}")]
     ZeroLink(String),
     // /// Generic signature validation error
-    // #[error("Validation failed: {0}")]
-    // Stark(String),
-
+    #[error("Invalid Proof")]
+    Invalid,
     // /// Key related errors
     // #[error("Key error: {0}")]
     // Ring(String),

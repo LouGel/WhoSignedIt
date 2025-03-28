@@ -1,26 +1,25 @@
-// File: src/services/signature/mod.rs
 pub mod ethereum;
 // mod solana;
 pub mod error;
 pub mod traits;
 
 pub use ethereum::EthereumSignatureClient;
-// pub use solana::SolanaSignatureClient;
 pub use traits::SignatureClient;
 
-/// Factory for creating signature clients
+use crate::error::AppError;
+
 pub struct SignatureClientFactory;
 
 impl SignatureClientFactory {
     /// Create a new signature client based on blockchain type
-    pub fn create_client(blockchain_type: &str) -> eyre::Result<Box<dyn SignatureClient>> {
+    pub fn create_client(blockchain_type: &str) -> Result<Box<dyn SignatureClient>, AppError> {
         match blockchain_type {
             "ethereum" => Ok(Box::new(EthereumSignatureClient::new())),
             // "solana" => Ok(Box::new(SolanaSignatureClient::new())),
-            _ => Err(eyre::eyre!(
+            _ => Err(AppError::Custom(format!(
                 "Unsupported blockchain type: {}",
                 blockchain_type
-            )),
+            ))),
         }
     }
 }

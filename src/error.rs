@@ -13,8 +13,10 @@ pub enum AppError {
     #[error("Proof error: {0}")]
     ProofError(#[from] ProofErrorKind),
 
+    #[error("Input error: {0}")]
+    Input(String),
+
     /// Custom error with message
-    #[allow(dead_code)]
     #[error("{0}")]
     Custom(String),
 }

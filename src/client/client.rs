@@ -1,12 +1,29 @@
 use super::generate::GenerateArgs;
-use crate::services::{
-    proof::{traits::FormatInput, ProofClient, ProofClientFactory},
-    signature::{SignatureClient, SignatureClientFactory},
+use crate::{
+    error::AppError,
+    services::{
+        proof::{error::ProofErrorKind, ProofClient, ProofClientFactory},
+        signature::{SignatureClient, SignatureClientFactory},
+    },
 };
 use clap::{Args, Parser, Subcommand};
-use eyre::Result;
 use std::{fs::File, io::Write, path::Path};
 
+#[derive(Debug, Clone, Copy)]
+pub enum FormatInput {
+    Json,
+    Toml,
+}
+impl std::str::FromStr for FormatInput {
+    type Err = AppError;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_ascii_lowercase().as_str() {
+            "json" => Ok(FormatInput::Json),
+            "toml" => Ok(FormatInput::Toml),
+            other => Err(AppError::Input(format!("Invalid format {other}"))),
+        }
+    }
+}
 /// Main client for the application
 pub struct AppClient {
     signature_client: Box<dyn SignatureClient>,
@@ -57,7 +74,7 @@ pub struct VerifyArgs {
 
 impl AppClient {
     /// Create a new app client
-    pub fn new(args: &AppArgs) -> Result<Self> {
+    pub fn new(args: &AppArgs) -> Result<Self, AppError> {
         // Create signature client based on blockchain type
         let signature_client = SignatureClientFactory::create_client(&args.blockchain)?;
 
@@ -75,7 +92,7 @@ impl AppClient {
     }
 
     /// Run the application
-    pub fn run(&self) -> Result<()> {
+    pub fn run(&self) -> Result<(), AppError> {
         match self.command.clone() {
             Command::Generate(sign_args) => {
                 // Parse or create a signature
@@ -87,9 +104,9 @@ impl AppClient {
                     self.signature_client
                         .sign_message(&sign_args.message, private_key)?
                 } else {
-                    return Err(eyre::eyre!(
+                    return Err(AppError::Custom(format!(
                         "Either signature or private key must be provided"
-                    ));
+                    )));
                 };
 
                 // Parse the group public keys
@@ -123,8 +140,15 @@ impl AppClient {
                     verify_args.proof
                 };
                 let proof = self.proof_client.from_str(&proof_str, self.format)?;
-                Ok(())
+                println!("Proof valid");
+                if proof.verify()? {
+                    println!("Valid proof");
+                    Ok(())
+                } else {
+                    Err(AppError::ProofError(ProofErrorKind::Invalid))
+                }
             }
+            #[allow(unreachable_patterns)]
             _ => todo!("Verify command not implemented"),
         }
     }
