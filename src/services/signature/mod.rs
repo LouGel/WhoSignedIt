@@ -6,7 +6,7 @@ pub mod traits;
 
 pub use ethereum::EthereumSignatureClient;
 // pub use solana::SolanaSignatureClient;
-pub use traits::{BlockchainSignature, PublicKey, SignatureClient};
+pub use traits::SignatureClient;
 
 /// Factory for creating signature clients
 pub struct SignatureClientFactory;

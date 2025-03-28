@@ -3,10 +3,10 @@ pub mod zerolink;
 
 pub mod error;
 
-pub use traits::{Proof, ProofClient};
+pub use traits::ProofClient;
 pub use zerolink::RingProofClient;
 
-use crate::services::signature::SignatureClient;
+use crate::{error::AppError, services::signature::SignatureClient};
 
 pub struct ProofClientFactory;
 
@@ -15,11 +15,14 @@ impl ProofClientFactory {
     pub fn create_client(
         proof: &str,
         signature_client: Box<dyn SignatureClient>,
-    ) -> eyre::Result<Box<dyn ProofClient>> {
+    ) -> Result<Box<dyn ProofClient>, AppError> {
         match proof {
             "ring" => Ok(Box::new(RingProofClient::new(signature_client))),
             // "stark" => Ok(Box::new(StarkProofClient::new(signature_client))),
-            _ => Err(eyre::eyre!("Unsupported proof type: {}", proof)),
+            _ => Err(AppError::Custom(format!(
+                "Unsupported proof type: {}",
+                proof
+            ))),
         }
     }
 }

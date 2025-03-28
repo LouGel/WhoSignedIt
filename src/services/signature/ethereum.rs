@@ -99,7 +99,7 @@ impl SignatureClient for EthereumSignatureClient {
 
                 Ok(PublicKey::Ethereum(recovered))
             }
-            _ => Err(EthereumError("Cannot retreive signature".to_owned()).into()),
+            _ => Err(EthereumError("Cannot retreive signature owner".to_owned()).into()),
         }
     }
     fn box_clone(&self) -> Box<dyn SignatureClient> {
