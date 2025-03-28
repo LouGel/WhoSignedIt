@@ -1,4 +1,4 @@
-use crate::client::{AppArgs, AppClient};
+use crate::client::client::{AppArgs, AppClient};
 use clap::Parser;
 use eyre::Result;
 
@@ -9,6 +9,6 @@ mod services;
 fn main() -> Result<()> {
     let args = AppArgs::parse();
     let client = AppClient::new(&args)?;
-    client.run(&args)?;
+    client.run()?;
     Ok(())
 }

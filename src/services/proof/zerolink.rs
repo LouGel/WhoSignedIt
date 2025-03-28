@@ -1,11 +1,9 @@
 use super::error::ProofErrorKind::ZeroLink;
-use super::traits::Format;
+use super::traits::FormatInput;
 use crate::error::AppError;
 use crate::services::proof::traits::{Proof, ProofClient};
 use crate::services::signature::traits::{BlockchainSignature, PublicKey, SignatureClient};
-use alloy_primitives::{keccak256, FixedBytes, B256, U256};
-use rand::seq::SliceRandom;
-// use eyre::Result;
+use alloy_primitives::{keccak256, B256, U256};
 use rand::{rng, Rng};
 use serde::{Deserialize, Serialize};
 use std::fmt::{Debug, Display};
@@ -23,7 +21,7 @@ impl RingProofClient {
 
 /// A simpler OR-proof alternative to ring signatures
 #[derive(Debug, Deserialize, Serialize)]
-pub struct ZeroLinkProofSignature {
+pub struct ZeroLinkProof {
     /// The message that was signed
     message: String,
 
@@ -39,19 +37,20 @@ pub struct ZeroLinkProofSignature {
     /// Commitments for each member
     commitments: Vec<B256>,
 }
-impl Display for ZeroLinkProofSignature {
+impl Display for ZeroLinkProof {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "\n{{\n{},\n{}\n}}", self.message, self.challenge)
     }
 }
 
-impl Proof for ZeroLinkProofSignature {
-    fn format(&self, format: Format) -> String {
+impl Proof for ZeroLinkProof {
+    fn format(&self, format: &FormatInput) -> String {
         match format {
-            Format::Json => serde_json::to_string_pretty(self).unwrap(),
-            Format::Toml => toml::to_string(self).unwrap(),
+            FormatInput::Json => serde_json::to_string_pretty(self).unwrap(),
+            FormatInput::Toml => toml::to_string(self).unwrap(),
         }
     }
+
     fn verify(&self) -> Result<bool, AppError> {
         println!("Verifying zero-link-proofsignature");
         println!("{self}");
@@ -212,7 +211,7 @@ impl ProofClient for RingProofClient {
             response_sum_check == challenge_u256
         );
 
-        let proof = ZeroLinkProofSignature {
+        let proof = ZeroLinkProof {
             message: message.to_string(),
             ring: group.to_vec(),
             challenge,
@@ -220,6 +219,21 @@ impl ProofClient for RingProofClient {
             commitments,
         };
 
+        Ok(Box::new(proof))
+    }
+
+    fn from_str(&self, proof: &str, fmt: FormatInput) -> Result<Box<dyn Proof>, AppError> {
+        let ret = match fmt {
+            FormatInput::Json => serde_json::from_str::<ZeroLinkProof>(proof),
+            FormatInput::Toml => serde_json::from_str::<ZeroLinkProof>(proof),
+        };
+
+        let proof = ret.or_else(|e| {
+            Err(AppError::Custom(format!(
+                "Wrong proof error {:?} format{:?}",
+                fmt, e
+            )))
+        })?;
         Ok(Box::new(proof))
     }
 }

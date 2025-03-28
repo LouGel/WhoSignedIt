@@ -3,44 +3,38 @@ use crate::{
     services::signature::traits::{BlockchainSignature, PublicKey},
 };
 use eyre::Result;
-use serde::Deserialize;
 use std::fmt::{Debug, Display};
+use tracing_subscriber::fmt::format::Format;
 
-#[derive(Debug, Clone)]
-pub enum Format {
+#[derive(Debug, Clone, Copy)]
+pub enum FormatInput {
     Json,
     Toml,
 }
-impl std::str::FromStr for Format {
+impl std::str::FromStr for FormatInput {
     type Err = AppError;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_ascii_lowercase().as_str() {
-            "json" => Ok(Format::Json),
-            "toml" => Ok(Format::Toml),
+            "json" => Ok(FormatInput::Json),
+            "toml" => Ok(FormatInput::Toml),
             _ => Err(AppError::Custom("Invalid format".to_owned())),
         }
     }
 }
-/// Base trait for all proofs
 pub trait Proof: Send + Sync + Display {
-    /// Verify the proof
     fn verify(&self) -> Result<bool, AppError>;
 
-    /// Get the message associated with this proof
     fn message(&self) -> &str;
 
-    fn format(&self, format: Format) -> String {
-        format!("{}", self)
-    }
+    fn format(&self, format: &FormatInput) -> String;
 }
 
-/// Trait for proof clients
 pub trait ProofClient: Send + Sync + Debug {
-    /// Create a proof that someone in a group signed a message
     fn create_group_signature_proof(
         &self,
         message: &str,
         signature: &BlockchainSignature,
         group: &[PublicKey],
     ) -> Result<Box<dyn Proof>, AppError>;
+    fn from_str(&self, proof: &str, format: FormatInput) -> Result<Box<dyn Proof>, AppError>;
 }

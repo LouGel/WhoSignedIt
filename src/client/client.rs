@@ -1,16 +1,19 @@
+use super::generate::GenerateArgs;
 use crate::services::{
-    proof::{traits::Format, ProofClient, ProofClientFactory},
+    proof::{traits::FormatInput, ProofClient, ProofClientFactory},
     signature::{SignatureClient, SignatureClientFactory},
 };
 use clap::{Args, Parser, Subcommand};
 use eyre::Result;
-use std::{fmt::Write as FmtWrite, fs::File, io::Write};
+use std::{fs::File, io::Write, path::Path};
 
 /// Main client for the application
 pub struct AppClient {
     signature_client: Box<dyn SignatureClient>,
     proof_client: Box<dyn ProofClient>,
     command: Command,
+    output: Option<String>,
+    format: FormatInput,
 }
 
 /// CLI Arguments for the application
@@ -24,6 +27,12 @@ pub struct AppArgs {
     #[clap(short, long, default_value = "ring")]
     pub proof: String,
 
+    #[clap(short, long, default_value = "json")]
+    pub format: FormatInput,
+
+    /// Output file path (optional)
+    #[clap(short, long)]
+    pub output: Option<String>,
     #[command(subcommand)]
     pub command: Command, // Fixed typo from "comand" to "command"
 }
@@ -40,52 +49,10 @@ pub enum Command {
 }
 
 #[derive(Args, Debug, Clone)]
-pub struct GenerateArgs {
-    /// Message to sign or verify
-    #[clap(short, long)]
-    pub message: String,
-
-    /// Input file path (optional)
-    #[clap(short, long)]
-    pub input: Option<String>,
-
-    /// Output file path (optional)
-    #[clap(short, long)]
-    pub output: Option<String>,
-
-    /// Existing signature (optional)
-    #[clap(short, long)]
-    pub signature: Option<String>,
-
-    #[clap(short, long, default_value = "json")]
-    pub format: Format,
-
-    /// Private key for signing (optional)
-    #[clap(long)]
-    pub private_key: Option<String>,
-
-    /// Group public keys (comma-separated)
-    #[clap(short, long, num_args = 1..)]
-    pub group_public_keys: Vec<String>,
-}
-
-#[derive(Args, Debug, Clone)]
 pub struct VerifyArgs {
-    /// Message that was signed
-    #[clap(short, long)]
-    pub message: String,
-
     /// Signature to verify
     #[clap(short, long)]
-    pub signature: String,
-
-    /// Public key of the signer
-    #[clap(short, long)]
-    pub public_key: Option<String>,
-
-    /// Group public keys for ring signatures
-    #[clap(short, long, num_args = 1..)]
-    pub group_public_keys: Vec<String>,
+    pub proof: String,
 }
 
 impl AppClient {
@@ -102,12 +69,14 @@ impl AppClient {
             signature_client,
             proof_client,
             command: args.command.clone(),
+            output: args.output.clone(),
+            format: args.format.clone(),
         })
     }
 
     /// Run the application
-    pub fn run(&self, args: &AppArgs) -> Result<()> {
-        match args.command.clone() {
+    pub fn run(&self) -> Result<()> {
+        match self.command.clone() {
             Command::Generate(sign_args) => {
                 // Parse or create a signature
                 let signature = if let Some(sig_str) = &sign_args.signature {
@@ -136,8 +105,8 @@ impl AppClient {
                     &signature,
                     &group,
                 )?;
-                let proof_json = proof.format(sign_args.format);
-                if let Some(output) = sign_args.output.as_ref() {
+                let proof_json = proof.format(&self.format);
+                if let Some(output) = self.output.as_ref() {
                     let mut handle =
                         File::create(output).expect("Cannot create of open output file");
                     handle.write(proof_json.as_bytes()).unwrap();
@@ -145,6 +114,15 @@ impl AppClient {
                     println!("{proof_json}")
                 }
 
+                Ok(())
+            }
+            Command::Verify(verify_args) => {
+                let proof_str = if Path::new(verify_args.proof.as_str()).exists() {
+                    std::fs::read_to_string(verify_args.proof.as_str()).unwrap()
+                } else {
+                    verify_args.proof
+                };
+                let proof = self.proof_client.from_str(&proof_str, self.format)?;
                 Ok(())
             }
             _ => todo!("Verify command not implemented"),
