@@ -7,6 +7,7 @@ use std::fmt::{Debug, Display};
 
 pub trait Proof: Send + Sync + Display {
     fn verify(&self) -> Result<bool, AppError>;
+
     #[allow(dead_code)]
     fn message(&self) -> &str;
 
