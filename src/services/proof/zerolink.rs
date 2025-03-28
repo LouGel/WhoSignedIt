@@ -4,7 +4,7 @@ use crate::error::AppError;
 use crate::services::proof::traits::{Proof, ProofClient};
 use crate::services::signature::traits::{BlockchainSignature, PublicKey, SignatureClient};
 use alloy_primitives::{keccak256, B256, U256};
-use rand::{rng, Rng};
+use rand::{rngs::OsRng, TryRngCore};
 use serde::{Deserialize, Serialize};
 use std::fmt::{Debug, Display};
 
@@ -165,8 +165,11 @@ impl ProofClient for RingProofClient {
 
         for i in 0..group.len() {
             if i != signer_position {
-                let response = U256::from(rng().random::<u128>()) // Change u64 -> u128 (or u256 if possible)
-                    | (U256::from(rng().random::<u128>()) << 128); // Fill full 256 bits
+                let mut bytes = [0u8; 32];
+                OsRng
+                    .try_fill_bytes(&mut bytes)
+                    .expect("Couldnt fill bytes for rng");
+                let response = U256::from_le_bytes(bytes);
 
                 responses.push(response);
                 response_sum = response_sum.overflowing_add(response).0;
