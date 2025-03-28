@@ -8,7 +8,6 @@ mod services;
 
 fn main() -> Result<()> {
     let args = AppArgs::parse();
-    let client = AppClient::new(&args)?;
-    client.run()?;
+    AppClient::run(&args)?;
     Ok(())
 }
