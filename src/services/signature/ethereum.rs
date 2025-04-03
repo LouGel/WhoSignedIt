@@ -1,7 +1,7 @@
 use super::error::SignatureErrorKind::EthereumError;
 use crate::{
     error::AppError,
-    services::signature::traits::{BlockchainSignature, PublicKey, SignatureClient},
+    services::signature::traits::{BlockchainSignature, ChainAddress, SignatureClient},
 };
 use alloy_primitives::{Address, PrimitiveSignature as EthSignature};
 use alloy_signer::SignerSync;
@@ -40,7 +40,7 @@ impl SignatureClient for EthereumSignatureClient {
         Ok(BlockchainSignature::Ethereum(signature))
     }
 
-    fn get_public_key(&self, private_key: &str) -> Result<PublicKey, AppError> {
+    fn get_address(&self, private_key: &str) -> Result<ChainAddress, AppError> {
         let private_key = if private_key.starts_with("0x") {
             private_key.to_string()
         } else {
@@ -52,7 +52,7 @@ impl SignatureClient for EthereumSignatureClient {
 
         let address = wallet.address();
 
-        Ok(PublicKey::Ethereum(address))
+        Ok(ChainAddress::Ethereum(address))
     }
 
     fn from_str(&self, signature_str: &str) -> Result<BlockchainSignature, AppError> {
@@ -77,12 +77,12 @@ impl SignatureClient for EthereumSignatureClient {
         Ok(BlockchainSignature::Ethereum(signature))
     }
 
-    fn parse_public_key(&self, pubkey_str: &str) -> Result<PublicKey, AppError> {
+    fn parse_public_key(&self, pubkey_str: &str) -> Result<ChainAddress, AppError> {
         let pubkey_str = pubkey_str.strip_prefix("0x").unwrap_or(pubkey_str);
         let address =
             Address::from_str(&pubkey_str).map_err(|e| EthereumError(format!("{:?}", e)))?;
 
-        Ok(PublicKey::Ethereum(address))
+        Ok(ChainAddress::Ethereum(address))
     }
 
     #[allow(unreachable_patterns)]
@@ -90,14 +90,14 @@ impl SignatureClient for EthereumSignatureClient {
         &self,
         message: &str,
         signature: &BlockchainSignature,
-    ) -> Result<PublicKey, AppError> {
+    ) -> Result<ChainAddress, AppError> {
         match signature {
             BlockchainSignature::Ethereum(sig) => {
                 let recovered = sig
                     .recover_address_from_msg(message.as_bytes())
                     .map_err(|e| EthereumError(e.to_string()))?;
 
-                Ok(PublicKey::Ethereum(recovered))
+                Ok(ChainAddress::Ethereum(recovered))
             }
             _ => Err(EthereumError("Cannot retreive signature owner".to_owned()).into()),
         }

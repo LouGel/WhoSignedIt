@@ -14,17 +14,17 @@ pub enum BlockchainSignature {
 
 /// Represents a public key from any blockchain
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
-pub enum PublicKey {
+pub enum ChainAddress {
     Ethereum(Address),
-    // Solana(ed25519_dalek::PublicKey),
+    // Solana(ed25519_dalek::ChainAddress),
 }
 
-impl PublicKey {
+impl ChainAddress {
     /// Convert the public key to a vector of bytes
     pub fn to_vec_u8(&self) -> Vec<u8> {
         match self {
-            PublicKey::Ethereum(address) => address.to_vec(),
-            // PublicKey::Solana(pubkey) => {
+            ChainAddress::Ethereum(address) => address.to_vec(),
+            // ChainAddress::Solana(pubkey) => {
             //     // For Solana, you would typically use the 32-byte public key
             //     pubkey.to_bytes().to_vec()
             // },
@@ -42,20 +42,20 @@ pub trait SignatureClient: Send + Sync + Debug {
     ) -> Result<BlockchainSignature, AppError>;
 
     /// Get the public key from a private key
-    fn get_public_key(&self, private_key: &str) -> Result<PublicKey, AppError>;
+    fn get_address(&self, private_key: &str) -> Result<ChainAddress, AppError>;
 
     /// Parse a signature from its string representation
     fn from_str(&self, signature_str: &str) -> Result<BlockchainSignature, AppError>;
 
     /// Parse a public key from its string representation
-    fn parse_public_key(&self, pubkey_str: &str) -> Result<PublicKey, AppError>;
+    fn parse_public_key(&self, pubkey_str: &str) -> Result<ChainAddress, AppError>;
 
     /// Verify a signature against a message and public key
     fn verify_signature(
         &self,
         message: &str,
         signature: &BlockchainSignature,
-    ) -> Result<PublicKey, AppError>;
+    ) -> Result<ChainAddress, AppError>;
 
     /// Clone the signature client
     fn box_clone(&self) -> Box<dyn SignatureClient>;

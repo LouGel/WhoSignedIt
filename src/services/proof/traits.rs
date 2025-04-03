@@ -1,7 +1,7 @@
 use crate::{
     client::client::FormatInput,
     error::AppError,
-    services::signature::traits::{BlockchainSignature, PublicKey},
+    services::signature::traits::{BlockchainSignature, ChainAddress},
 };
 use std::fmt::{Debug, Display};
 
@@ -19,7 +19,7 @@ pub trait ProofClient: Send + Sync + Debug {
         &self,
         message: &str,
         signature: &BlockchainSignature,
-        group: &[PublicKey],
+        group: &[ChainAddress],
     ) -> Result<Box<dyn Proof>, AppError>;
     fn from_str(&self, proof: &str, format: FormatInput) -> Result<Box<dyn Proof>, AppError>;
 }
