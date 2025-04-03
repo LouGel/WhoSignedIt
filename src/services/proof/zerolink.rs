@@ -2,7 +2,7 @@ use super::error::ProofErrorKind::ZeroLink;
 use crate::client::client::FormatInput;
 use crate::error::AppError;
 use crate::services::proof::traits::{Proof, ProofClient};
-use crate::services::signature::traits::{BlockchainSignature, PublicKey, SignatureClient};
+use crate::services::signature::traits::{BlockchainSignature, ChainAddress, SignatureClient};
 use alloy_primitives::{keccak256, B256, U256};
 use rand::{rngs::OsRng, TryRngCore};
 use serde::{Deserialize, Serialize};
@@ -26,7 +26,7 @@ pub struct ZeroLinkProof {
     message: String,
 
     /// The ring members (public keys)
-    ring: Vec<PublicKey>,
+    ring: Vec<ChainAddress>,
 
     /// Challenge value (same as hash of message)
     challenge: B256,
@@ -39,7 +39,7 @@ pub struct ZeroLinkProof {
 }
 impl Display for ZeroLinkProof {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "\n{{\n{},\n{}\n}}", self.message, self.challenge)
+        write!(f, "{}", serde_json::to_string_pretty(self).unwrap())
     }
 }
 
@@ -91,7 +91,7 @@ impl Proof for ZeroLinkProof {
 /// Create a commitment for a group member
 fn create_commitment(
     message: &str,
-    public_key: &PublicKey,
+    public_key: &ChainAddress,
     response: U256,
 ) -> Result<B256, AppError> {
     // Create the commitment data
@@ -99,8 +99,8 @@ fn create_commitment(
     commitment_data.extend_from_slice(message.as_bytes());
 
     match public_key {
-        PublicKey::Ethereum(addr) => commitment_data.extend_from_slice(&addr.to_vec()),
-        // PublicKey::Solana(pubkey) => commitment_data.extend_from_slice(pubkey.as_bytes()),
+        ChainAddress::Ethereum(addr) => commitment_data.extend_from_slice(&addr.to_vec()),
+        // ChainAddress::Solana(pubkey) => commitment_data.extend_from_slice(pubkey.as_bytes()),
     }
 
     commitment_data.extend_from_slice(&response.to_be_bytes::<32>());
@@ -114,7 +114,7 @@ fn create_commitment(
 /// Verify a commitment
 fn verify_commitment(
     message: &str,
-    public_key: &PublicKey,
+    public_key: &ChainAddress,
     response: U256,
     commitment: &B256,
 ) -> Result<bool, AppError> {
@@ -136,7 +136,7 @@ fn verify_responses_sum(responses: &[U256], challenge: &B256) -> Result<bool, Ap
     // Sum of responses should be equal to challenge (mod 2^256)
     Ok(sum == challenge_u256)
 }
-fn order_public_keys(group: &[PublicKey]) -> Vec<PublicKey> {
+fn order_public_keys(group: &[ChainAddress]) -> Vec<ChainAddress> {
     let mut group = group.to_vec();
     group.sort_by(|a, b| a.to_vec_u8().cmp(&b.to_vec_u8()));
     group
@@ -146,7 +146,7 @@ impl ProofClient for RingProofClient {
         &self,
         message: &str,
         signature: &BlockchainSignature,
-        group: &[PublicKey],
+        group: &[ChainAddress],
     ) -> Result<Box<dyn Proof>, AppError> {
         let group = order_public_keys(group);
 
