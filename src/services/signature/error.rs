@@ -6,6 +6,9 @@ pub enum SignatureErrorKind {
     #[error("Ethereum error: {0}")]
     EthereumError(String),
 
+    /// Ethereum-specific signature errors
+    #[error("SolanaError error: {0}")]
+    SolanaError(String),
     /// Generic signature validation error
     #[error("Validation failed: {0}")]
     ValidationError(String),

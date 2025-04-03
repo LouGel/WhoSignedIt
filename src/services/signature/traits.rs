@@ -9,14 +9,14 @@ use crate::error::AppError;
 #[derive(Debug, Clone)]
 pub enum BlockchainSignature {
     Ethereum(alloy_primitives::PrimitiveSignature),
-    // Solana(ed25519_dalek::Signature),
+    Solana(solana_sdk::signature::Signature),
 }
 
 /// Represents a public key from any blockchain
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 pub enum ChainAddress {
     Ethereum(Address),
-    // Solana(ed25519_dalek::ChainAddress),
+    Solana(solana_program::pubkey::Pubkey),
 }
 
 impl ChainAddress {
@@ -24,10 +24,10 @@ impl ChainAddress {
     pub fn to_vec_u8(&self) -> Vec<u8> {
         match self {
             ChainAddress::Ethereum(address) => address.to_vec(),
-            // ChainAddress::Solana(pubkey) => {
-            //     // For Solana, you would typically use the 32-byte public key
-            //     pubkey.to_bytes().to_vec()
-            // },
+            ChainAddress::Solana(pubkey) => {
+                // For Solana, you would typically use the 32-byte public key
+                pubkey.to_bytes().to_vec()
+            }
         }
     }
 }
@@ -55,7 +55,8 @@ pub trait SignatureClient: Send + Sync + Debug {
         &self,
         message: &str,
         signature: &BlockchainSignature,
-    ) -> Result<ChainAddress, AppError>;
+        address: &ChainAddress,
+    ) -> bool;
 
     /// Clone the signature client
     fn box_clone(&self) -> Box<dyn SignatureClient>;
