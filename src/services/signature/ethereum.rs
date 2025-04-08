@@ -94,7 +94,6 @@ impl SignatureClient for EthereumSignatureClient {
         match signature {
             BlockchainSignature::Ethereum(sig) => {
                 let recovered = sig.recover_address_from_msg(message.as_bytes());
-
                 if let Ok(recovered_address) = recovered {
                     ChainAddress::Ethereum(recovered_address) == *address
                 } else {
