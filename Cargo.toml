@@ -23,7 +23,7 @@ winterfell = { version = "0.12.0", features = ["concurrent"] }
 ed25519-dalek ={ version = "2.1.1", features = ["pkcs8"]}
 clippy = "0.0.302"
 toml = "0.8.20"
-solana-sdk = {version = "2.2.2", features = ["verify"]}
+solana-sdk = {version = "2.2.2", features = ["full"]}
 
 
 

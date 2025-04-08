@@ -16,7 +16,7 @@ pub enum BlockchainSignature {
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 pub enum ChainAddress {
     Ethereum(Address),
-    Solana(solana_program::pubkey::Pubkey),
+    Solana(solana_sdk::pubkey::Pubkey),
 }
 
 impl ChainAddress {

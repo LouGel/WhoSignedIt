@@ -85,7 +85,6 @@ impl SignatureClient for EthereumSignatureClient {
         Ok(ChainAddress::Ethereum(address))
     }
 
-    #[allow(unreachable_patterns)]
     fn verify_signature(
         &self,
         message: &str,
@@ -94,12 +93,13 @@ impl SignatureClient for EthereumSignatureClient {
     ) -> bool {
         match signature {
             BlockchainSignature::Ethereum(sig) => {
-                let recovered = sig
-                    .recover_address_from_msg(message.as_bytes())
-                    .map_err(|e| EthereumError(e.to_string()))
-                    .unwrap();
+                let recovered = sig.recover_address_from_msg(message.as_bytes());
 
-                ChainAddress::Ethereum(recovered) == *address
+                if let Ok(recovered_address) = recovered {
+                    ChainAddress::Ethereum(recovered_address) == *address
+                } else {
+                    false
+                }
             }
             _ => false,
         }

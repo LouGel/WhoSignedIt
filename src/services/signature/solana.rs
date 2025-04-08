@@ -71,20 +71,17 @@ impl SignatureClient for SolanaSignatureClient {
         Ok(ChainAddress::Solana(address))
     }
 
-    #[allow(unreachable_patterns)]
     fn verify_signature(
         &self,
         message: &str,
         signature: &BlockchainSignature,
-    ) -> Result<ChainAddress, AppError> {
+        address: &ChainAddress,
+    ) -> bool {
         match signature {
             BlockchainSignature::Solana(sig) => {
-                sig.verify(message.as_bytes(), &sig)
-                    .map_err(|_| SolanaError("Signature verification failed".to_owned()))?;
-
-                Ok(ChainAddress::Solana(recovered))
+                sig.verify(message.as_bytes(), &address.to_vec_u8())
             }
-            _ => Err(SolanaError("Cannot retreive signature owner".to_owned()).into()),
+            _ => false,
         }
     }
     fn box_clone(&self) -> Box<dyn SignatureClient> {
