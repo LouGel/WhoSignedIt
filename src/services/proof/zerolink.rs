@@ -100,7 +100,7 @@ fn create_commitment(
 
     match public_key {
         ChainAddress::Ethereum(addr) => commitment_data.extend_from_slice(&addr.to_vec()),
-        // ChainAddress::Solana(pubkey) => commitment_data.extend_from_slice(pubkey.as_bytes()),
+        ChainAddress::Solana(pubkey) => commitment_data.extend_from_slice(pubkey.as_ref()),
     }
 
     commitment_data.extend_from_slice(&response.to_be_bytes::<32>());
@@ -150,10 +150,12 @@ impl ProofClient for RingProofClient {
     ) -> Result<Box<dyn Proof>, AppError> {
         let group = order_public_keys(group);
 
-        let signer_public_key = self.signature_client.verify_signature(message, signature)?;
         let signer_position = group
             .iter()
-            .position(|pk| *pk == signer_public_key)
+            .position(|pk| {
+                self.signature_client
+                    .verify_signature(message, signature, pk)
+            })
             .ok_or_else(|| ZeroLink("Signer's public key not found in the group".to_owned()))?;
 
         let challenge = keccak256(message.as_bytes());

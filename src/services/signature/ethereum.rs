@@ -85,23 +85,25 @@ impl SignatureClient for EthereumSignatureClient {
         Ok(ChainAddress::Ethereum(address))
     }
 
-    #[allow(unreachable_patterns)]
     fn verify_signature(
         &self,
         message: &str,
         signature: &BlockchainSignature,
-    ) -> Result<ChainAddress, AppError> {
+        address: &ChainAddress,
+    ) -> bool {
         match signature {
             BlockchainSignature::Ethereum(sig) => {
-                let recovered = sig
-                    .recover_address_from_msg(message.as_bytes())
-                    .map_err(|e| EthereumError(e.to_string()))?;
-
-                Ok(ChainAddress::Ethereum(recovered))
+                let recovered = sig.recover_address_from_msg(message.as_bytes());
+                if let Ok(recovered_address) = recovered {
+                    ChainAddress::Ethereum(recovered_address) == *address
+                } else {
+                    false
+                }
             }
-            _ => Err(EthereumError("Cannot retreive signature owner".to_owned()).into()),
+            _ => false,
         }
     }
+
     fn box_clone(&self) -> Box<dyn SignatureClient> {
         Box::new(self.clone())
     }
