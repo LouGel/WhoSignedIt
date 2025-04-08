@@ -191,8 +191,6 @@ impl ProofClient for RingProofClient {
 
         responses[signer_position] = signer_response;
 
-        println!("Calculated signer's response: {}", signer_response);
-
         // Create commitments for each group member
         let mut commitments = Vec::with_capacity(group.len());
 
@@ -200,7 +198,6 @@ impl ProofClient for RingProofClient {
             let commitment = create_commitment(message, &group[i], responses[i])?;
 
             commitments.push(commitment);
-            println!("Commitment {} created", i);
         }
 
         // Verify the proof ourselves
